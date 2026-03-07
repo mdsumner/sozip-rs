@@ -1,0 +1,42 @@
+[package]
+name = "sozip"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.75"
+authors = ["Michael Sumner <mdsumner@gmail.com>"]
+description = "Seek-Optimized ZIP (SOZip) reader — random access within Deflate-compressed ZIP entries"
+license = "MIT"
+repository = "https://github.com/mdsumner/sozip-rs"
+keywords = ["zip", "sozip", "geospatial", "cloud-native", "compression"]
+categories = ["compression", "filesystem"]
+readme = "README.md"
+
+[dependencies]
+# Index parsing (no-std compatible, pure computation)
+# No dependencies needed for index module
+
+# ZIP structure parsing — we need raw byte offsets, not just decompressed streams.
+# async_zip gives us central directory parsing but does NOT expose local header
+# offsets in its public API. Two options:
+#   1. Use async_zip for CD parsing + compute data offsets ourselves from
+#      header_offset + local header size (30 + filename_len + extra_len)
+#   2. Use rawzip which exposes ZipEntryData with raw offsets
+#
+# For Phase 1 (local file, sync) we use the `zip` crate which exposes
+# data_start() on ZipFile. For Phase 2 (async/object_store) we revisit.
+zip = { version = "0.6", default-features = false, features = ["deflate"] }
+flate2 = "1"
+thiserror = "2"
+bytes = "1"
+
+# Phase 2 dependencies (behind feature flags, not yet active)
+# object_store = { version = "0.11", optional = true }
+# tokio = { version = "1", features = ["io-util"], optional = true }
+# futures = { version = "0.3", optional = true }
+
+[dev-dependencies]
+tempfile = "3"
+
+# [features]
+# default = []
+# object-store = ["dep:object_store", "dep:tokio", "dep:futures"]
